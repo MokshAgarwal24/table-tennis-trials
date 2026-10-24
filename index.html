@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpinPulse • Table Tennis Trials & Tournament Manager</title>
+  <meta name="description" content="Professional Table Tennis Trials tournament manager. Live 7-table scoring, Best of 3 games, Male and Female round-robin pairing, Top 7 qualifying leaderboard, and real-time match logs.">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  
+  <!-- Modern Athletic Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <!-- Tournament Header Banner -->
+    <header class="tournament-header">
+      <div class="header-top">
+        <div class="brand-wrapper">
+          <div class="brand-icon">🏓</div>
+          <div>
+            <h1 class="brand-title">
+              SPINPULSE <span class="badge-tag">TRIALS EDITION</span>
+            </h1>
+            <p class="brand-subtitle">
+              Round-Robin 1v1 Table Tennis Selection Trials • Best of 3 (First to 2) • Top 7 Qualifiers
+            </p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <span id="saveIndicator" style="font-size: 0.78rem; color: var(--accent-green); font-family: var(--font-mono); opacity: 0.7; transition: opacity 0.3s;">
+            Auto-Saved
+          </span>
+          <button class="btn btn-secondary btn-sm" id="soundToggleBtn" onclick="toggleSound()">
+            🔊 Sound On
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="exportStandingsCSV()">
+            📥 Export CSV
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="printReport()">
+            🖨️ Print Report
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="promptResetTournament()">
+            🔄 Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Strip -->
+      <div class="tournament-stats-strip">
+        <div class="stat-item">
+          <span class="stat-label">Total Players</span>
+          <span class="stat-value highlight" id="statTotalPlayers">15</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total Matches</span>
+          <span class="stat-value" id="statTotalMatches">55</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Completed</span>
+          <span class="stat-value" id="statCompletedMatches">0 (0%)</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Tables Active</span>
+          <span class="stat-value highlight" id="statLiveMatches">7</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Tournament Progress</span>
+          <span class="stat-value" id="statProgress">0%</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav" aria-label="Main Navigation">
+      <button class="tab-btn active" data-tab="tables" onclick="switchTab('tables')">
+        <span>🏓 Live Tables</span>
+        <span class="tab-pill" id="tabPillTables">7 Tables</span>
+      </button>
+      <button class="tab-btn" data-tab="standings" onclick="switchTab('standings')">
+        <span>🏆 Standings & Top 7</span>
+        <span class="tab-pill">Qualifiers</span>
+      </button>
+      <button class="tab-btn" data-tab="fixtures" onclick="switchTab('fixtures')">
+        <span>📋 All Fixtures & Rounds</span>
+        <span class="tab-pill">Schedule</span>
+      </button>
+      <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')">
+        <span>📜 Match Activity Logs</span>
+        <span class="tab-pill">Audit Trail</span>
+      </button>
+      <button class="tab-btn" data-tab="setup" onclick="switchTab('setup')">
+        <span>⚙️ Setup & Roster</span>
+        <span class="tab-pill">Config</span>
+      </button>
+    </nav>
+
+    <!-- ======================================================================
+         VIEW 1: LIVE TABLES DASHBOARD
+         ====================================================================== -->
+    <section id="view_tables">
+      <div class="tables-toolbar">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+            Division Filter:
+          </span>
+          <div class="table-filter-chips">
+            <button class="filter-chip tables-div-chip active" data-div="all">All Divisions</button>
+            <button class="filter-chip tables-div-chip" data-div="male">Men's Tables Only</button>
+            <button class="filter-chip tables-div-chip" data-div="female">Women's Tables Only</button>
+          </div>
+        </div>
+
+        <div style="font-size: 0.82rem; color: var(--text-dim); display: flex; align-items: center; gap: 8px;">
+          <span>Match Format: <strong>Best of 3 Games</strong> (First to 2 wins)</span>
+        </div>
+      </div>
+
+      <!-- Live Tables Grid -->
+      <div class="tables-grid" id="tablesGrid">
+        <!-- Injected dynamically by app.js -->
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 2: STANDINGS & TOP 7 QUALIFIERS
+         ====================================================================== -->
+    <section id="view_standings" style="display: none;">
+      <div class="standings-container">
+        <!-- Men's Top 7 Standings -->
+        <div class="division-standings-card male">
+          <div class="division-header">
+            <h2 class="division-title">
+              <span>♂ Men's Division</span>
+            </h2>
+            <span class="qualifying-badge">⭐ TOP 7 QUALIFY</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+            Round-robin rankings sorted by Wins, Win %, Game Difference, and Point Difference.
+          </p>
+          <div id="standingsMaleContainer">
+            <!-- Injected by app.js -->
+          </div>
+        </div>
+
+        <!-- Women's Top 7 Standings -->
+        <div class="division-standings-card female">
+          <div class="division-header">
+            <h2 class="division-title">
+              <span>♀ Women's Division</span>
+            </h2>
+            <span class="qualifying-badge">⭐ TOP 7 QUALIFY</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+            Round-robin rankings sorted by Wins, Win %, Game Difference, and Point Difference.
+          </p>
+          <div id="standingsFemaleContainer">
+            <!-- Injected by app.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 3: ALL FIXTURES & ROUNDS
+         ====================================================================== -->
+    <section id="view_fixtures" style="display: none;">
+      <div class="fixtures-controls">
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+          <div>
+            <label class="form-label" style="margin-bottom: 4px;">Filter Round:</label>
+            <select class="form-select" id="fixturesRoundFilter" style="width: 170px; padding: 7px 12px; font-size: 0.88rem;">
+              <option value="all">All Rounds</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="margin-bottom: 4px;">Filter Division:</label>
+            <select class="form-select" id="fixturesDivFilter" style="width: 170px; padding: 7px 12px; font-size: 0.88rem;">
+              <option value="all">All Divisions</option>
+              <option value="male">Men's 1v1 Only</option>
+              <option value="female">Women's 1v1 Only</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="font-size: 0.82rem; color: var(--text-muted);">
+          Each player competes in 1 match per round. Tables run concurrent matches.
+        </div>
+      </div>
+
+      <div id="fixturesContainer">
+        <!-- Injected by app.js -->
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 4: MATCH ACTIVITY LOGS
+         ====================================================================== -->
+    <section id="view_logs" style="display: none;">
+      <div class="logs-toolbar">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+          <input type="text" id="logsSearchInput" class="form-input" placeholder="Search player name or match info..." style="max-width: 320px; font-size: 0.88rem; padding: 8px 12px;">
+          <select id="logsDivFilter" class="form-select" style="max-width: 180px; font-size: 0.88rem; padding: 8px 12px;">
+            <option value="all">All Divisions</option>
+            <option value="male">Men's Only</option>
+            <option value="female">Women's Only</option>
+          </select>
+        </div>
+
+        <button class="btn btn-secondary btn-sm" onclick="exportStandingsCSV()">
+          📥 Export Log CSV
+        </button>
+      </div>
+
+      <div class="logs-timeline" id="logsTimeline">
+        <!-- Injected by app.js -->
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 5: SETUP & ROSTER MANAGEMENT
+         ====================================================================== -->
+    <section id="view_setup" style="display: none;">
+      <div class="setup-grid">
+        <!-- Left: Configuration & Add Player -->
+        <div class="panel-card">
+          <!-- Hero Card Graphic -->
+          <div class="hero-card">
+            <img src="assets/hero.jpg" alt="Table Tennis Trials Graphic" onerror="this.style.display='none'">
+            <div class="hero-overlay">
+              <h3>Tournament Parameters</h3>
+              <p>Configure tables, match duration, and registered athletes.</p>
+            </div>
+          </div>
+
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span>⚙️ Tournament Settings</span>
+            </h2>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="configTableCount">Number of Available Tables</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="number" id="configTableCount" class="form-input" value="7" min="1" max="32" style="max-width: 120px; font-family: var(--font-mono); font-weight: 700;">
+              <span class="form-hint" style="margin-top: 0;">(Matches are dispatched to these tables simultaneously)</span>
+            </div>
+          </div>
+
+          <div class="form-group" style="padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+            <label class="form-label">Add Athlete to Trials</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+              <input type="text" id="newPlayerName" class="form-input" placeholder="Enter athlete full name..." style="flex: 1;">
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div class="gender-toggle-group" style="flex: 1;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--accent-male-light);">
+                  <input type="radio" name="newPlayerGender" value="male" checked> ♂ Male
+                </label>
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--accent-female-light); margin-left: 14px;">
+                  <input type="radio" name="newPlayerGender" value="female"> ♀ Female
+                </label>
+              </div>
+
+              <button class="btn btn-primary" onclick="addPlayer()">
+                + Add Athlete
+              </button>
+            </div>
+            <p class="form-hint">Athletes are strictly paired Male vs Male and Female vs Female in 1v1 round robins.</p>
+          </div>
+
+          <div style="padding-top: 18px; border-top: 1px solid var(--border-subtle); display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="loadDefaultPlayers()">
+              🔄 Reset to 15 Sample Players (10M / 5F)
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="clearAllPlayers()">
+              🗑️ Clear Roster
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Current Roster & Schedule Builder -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span>📋 Registered Roster</span>
+            </h2>
+            <span class="badge-tag" id="rosterBadgeCount">Dynamic</span>
+          </div>
+
+          <div class="roster-table-wrapper">
+            <table class="roster-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px;">#</th>
+                  <th>Athlete Name</th>
+                  <th style="width: 100px;">Division</th>
+                  <th style="text-align: right; width: 110px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rosterTableBody">
+                <!-- Injected by app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tournament Calculation Projection -->
+          <div style="margin-top: 18px; padding: 14px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md);">
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--accent-green); margin-bottom: 4px;">
+              Tournament Projection
+            </div>
+            <div id="rosterCalculationSummary" style="font-size: 0.85rem; color: var(--text-main); line-height: 1.6;">
+              <!-- Injected by app.js -->
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="generateTournament()">
+              ⚡ Generate Schedule & Start Trials
+            </button>
+            <p style="text-align: center; font-size: 0.78rem; color: var(--text-dim); margin-top: 8px;">
+              Generating a new schedule will preserve roster but reset match scores.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Reset Confirmation Modal -->
+  <div class="modal-backdrop" id="resetModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Reset Tournament?</h3>
+        <button class="modal-close-btn" onclick="closeResetModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>This will reset all current matches, live scores, and activity logs. Your player roster and table configuration will remain intact.</p>
+        <p style="margin-top: 10px; font-weight: 600; color: #ef4444;">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeResetModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmResetTournament()">Yes, Reset Tournament</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Core JavaScript -->
+  <script src="js/app.js"></script>
+</body>
+</html>
