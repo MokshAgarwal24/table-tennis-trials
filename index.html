@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpinPulse • Table Tennis Trials & Tournament Manager</title>
-  <meta name="description" content="Professional Table Tennis Trials tournament manager. Live 7-table scoring, Best of 3 games, Male and Female round-robin pairing, Top 7 qualifying leaderboard, and real-time match logs.">
+  <meta name="description" content="Professional Table Tennis Trials tournament manager. Separate Men's & Women's tables, multi-day continuation, division finalization, Best of 3 scoring, Top 7 qualifiers, and late player entry.">
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   
   <!-- Modern Athletic Google Fonts -->
@@ -17,57 +17,117 @@
 <body>
 
   <div class="app-wrapper">
-    <!-- Tournament Header Banner -->
+    <!-- Tournament Header Banner (Refined, Pleasant Sports Card) -->
     <header class="tournament-header">
       <div class="header-top">
         <div class="brand-wrapper">
-          <div class="brand-icon">🏓</div>
+          <div class="brand-icon-box">TT</div>
           <div>
             <h1 class="brand-title">
-              SPINPULSE <span class="badge-tag">TRIALS EDITION</span>
+              SPINPULSE <span class="badge-tag-gold">TRIALS EDITION</span>
             </h1>
             <p class="brand-subtitle">
-              Round-Robin 1v1 Table Tennis Selection Trials • Best of 3 (First to 2) • Top 7 Qualifiers
+              Round-Robin Selection Trials • Dedicated Tables for Men & Women • Best of 3 • Top 7 Qualifiers
             </p>
           </div>
         </div>
 
         <div class="header-actions">
-          <span id="saveIndicator" style="font-size: 0.78rem; color: var(--accent-green); font-family: var(--font-mono); opacity: 0.7; transition: opacity 0.3s;">
+          <span id="saveIndicator" style="font-size: 0.78rem; color: var(--accent-primary); font-family: var(--font-mono); font-weight: 700; opacity: 0.8; transition: opacity 0.3s;">
             Auto-Saved
           </span>
+
+          <!-- Late Player Quick Action -->
+          <button class="btn btn-amber btn-sm" onclick="openLatePlayerModal()" title="Add late arrival without resetting active tournament">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            <span>+ Late Entry</span>
+          </button>
+
+          <!-- Continue Another Day / Multi-Day Session Actions -->
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="badge-tag-gold" id="headerDayBadge" style="font-weight: 800; font-size: 0.8rem; padding: 5px 9px;">Day 0</span>
+            <button class="btn btn-secondary btn-sm" id="btnPauseDay" onclick="togglePauseDay()" title="Pause today's session and continue another day" disabled>
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+              <span id="pauseBtnText">Pause Day</span>
+            </button>
+          </div>
+
+          <button class="btn btn-secondary btn-sm" onclick="openEndTournamentModal()" title="Finalize tournament for Men, Women, or Both">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>End Division</span>
+          </button>
+
+          <button class="btn btn-secondary btn-sm" onclick="exportTournamentBackup()" title="Download full tournament backup file to continue on another day or computer">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <span>Backup</span>
+          </button>
+
+          <button class="btn btn-secondary btn-sm" onclick="triggerImportBackup()" title="Load tournament session from file">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span>Load</span>
+          </button>
+          <input type="file" id="importBackupInput" accept=".json" style="display:none" onchange="handleImportBackup(event)">
+
+          <!-- Theme Toggle -->
+          <button class="btn btn-secondary btn-sm" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Light / Dark mode">
+            <svg class="svg-icon svg-icon-sm" id="themeIcon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <span id="themeToggleText">Dark Mode</span>
+          </button>
+
           <button class="btn btn-secondary btn-sm" id="soundToggleBtn" onclick="toggleSound()">
-            🔊 Sound On
+            <svg class="svg-icon svg-icon-sm" id="soundIcon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <span id="soundToggleText">Sound</span>
           </button>
-          <button class="btn btn-secondary btn-sm" onclick="exportStandingsCSV()">
-            📥 Export CSV
+
+          <button class="btn btn-secondary btn-sm" onclick="exportStandingsCSV()" title="Export Standings to CSV">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>CSV</span>
           </button>
+
           <button class="btn btn-secondary btn-sm" onclick="printReport()">
-            🖨️ Print Report
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <span>Print</span>
           </button>
+
           <button class="btn btn-danger btn-sm" onclick="promptResetTournament()">
-            🔄 Reset
+            <span>Reset</span>
           </button>
+        </div>
+      </div>
+
+      <!-- Multi-Day Paused Session Banner (Rendered dynamically when paused) -->
+      <div id="pausedSessionBanner" style="display: none;" class="tournament-paused-banner">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg>
+          <span id="pausedSessionText">Tournament Day Paused. All scores and tables are preserved safely.</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary btn-sm" onclick="resumeTournamentSession()">Resume Live Tournament</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportTournamentBackup()">Export Backup File</button>
         </div>
       </div>
 
       <!-- Quick Metrics Strip -->
       <div class="tournament-stats-strip">
         <div class="stat-item">
-          <span class="stat-label">Total Players</span>
-          <span class="stat-value highlight" id="statTotalPlayers">15</span>
+          <span class="stat-label">Trials Session</span>
+          <span class="stat-value highlight" id="statTournamentDay">Day 0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total Athletes</span>
+          <span class="stat-value highlight" id="statTotalPlayers">0 (0M / 0F)</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Total Matches</span>
-          <span class="stat-value" id="statTotalMatches">55</span>
+          <span class="stat-value" id="statTotalMatches">0</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Completed</span>
           <span class="stat-value" id="statCompletedMatches">0 (0%)</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Tables Active</span>
-          <span class="stat-value highlight" id="statLiveMatches">7</span>
+          <span class="stat-label">Tables Config</span>
+          <span class="stat-value highlight" id="statLiveMatches">7 (4M / 3F)</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Tournament Progress</span>
@@ -79,23 +139,28 @@
     <!-- Navigation Tabs -->
     <nav class="tabs-nav" aria-label="Main Navigation">
       <button class="tab-btn active" data-tab="tables" onclick="switchTab('tables')">
-        <span>🏓 Live Tables</span>
+        <svg class="svg-icon" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M12 7v14"></path><path d="M2 12h20"></path></svg>
+        <span>Live Tables</span>
         <span class="tab-pill" id="tabPillTables">7 Tables</span>
       </button>
       <button class="tab-btn" data-tab="standings" onclick="switchTab('standings')">
-        <span>🏆 Standings & Top 7</span>
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H7v2h10v-2h-2c-.55 0-1-.45-1-1v-2.34c3.27-.67 5.75-3.53 5.75-6.66H4.25C4.25 11.13 6.73 14 10 14.66z"></path></svg>
+        <span>Standings & Top 7</span>
         <span class="tab-pill">Qualifiers</span>
       </button>
       <button class="tab-btn" data-tab="fixtures" onclick="switchTab('fixtures')">
-        <span>📋 All Fixtures & Rounds</span>
+        <svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>All Fixtures & Rounds</span>
         <span class="tab-pill">Schedule</span>
       </button>
       <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')">
-        <span>📜 Match Activity Logs</span>
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Match Activity Logs</span>
         <span class="tab-pill">Audit Trail</span>
       </button>
       <button class="tab-btn" data-tab="setup" onclick="switchTab('setup')">
-        <span>⚙️ Setup & Roster</span>
+        <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Setup & Tables</span>
         <span class="tab-pill">Config</span>
       </button>
     </nav>
@@ -106,18 +171,28 @@
     <section id="view_tables">
       <div class="tables-toolbar">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
-            Division Filter:
+          <span style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+            Filter Tables:
           </span>
           <div class="table-filter-chips">
-            <button class="filter-chip tables-div-chip active" data-div="all">All Divisions</button>
-            <button class="filter-chip tables-div-chip" data-div="male">Men's Tables Only</button>
-            <button class="filter-chip tables-div-chip" data-div="female">Women's Tables Only</button>
+            <button class="filter-chip tables-div-chip active" data-div="all">All Tables</button>
+            <button class="filter-chip tables-div-chip" data-div="male">Men's Tables</button>
+            <button class="filter-chip tables-div-chip" data-div="female">Women's Tables</button>
           </div>
         </div>
 
-        <div style="font-size: 0.82rem; color: var(--text-dim); display: flex; align-items: center; gap: 8px;">
-          <span>Match Format: <strong>Best of 3 Games</strong> (First to 2 wins)</span>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-secondary btn-sm" id="btnToggleFlexTables" onclick="toggleFlexTables()" title="Toggle auto-distributing games to idle tables when a gender finishes">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span id="flexTablesStatusText">Auto-Flex: ON</span>
+          </button>
+          <button class="btn btn-amber btn-sm" onclick="openLatePlayerModal()">
+            <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            <span>+ Add Late Arrival</span>
+          </button>
+          <span id="tablesAllocationNotice" style="font-size: 0.8rem; color: var(--text-dim);">
+            <!-- Injected by app.js -->
+          </span>
         </div>
       </div>
 
@@ -133,14 +208,20 @@
     <section id="view_standings" style="display: none;">
       <div class="standings-container">
         <!-- Men's Top 7 Standings -->
-        <div class="division-standings-card male">
+        <div class="division-standings-card male" id="maleStandingsCard">
           <div class="division-header">
             <h2 class="division-title">
-              <span>♂ Men's Division</span>
+              <span>Men's Division</span>
             </h2>
-            <span class="qualifying-badge">⭐ TOP 7 QUALIFY</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="qualifying-badge">TOP 7 QUALIFIED</span>
+              <button class="btn btn-secondary btn-sm" id="btnToggleConcludeMale" onclick="toggleConcludeDivision('male')" style="font-size: 0.74rem; padding: 4px 8px;">
+                End Men's Trials
+              </button>
+            </div>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+          <div id="maleConcludedBanner"></div>
+          <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px;">
             Round-robin rankings sorted by Wins, Win %, Game Difference, and Point Difference.
           </p>
           <div id="standingsMaleContainer">
@@ -149,14 +230,20 @@
         </div>
 
         <!-- Women's Top 7 Standings -->
-        <div class="division-standings-card female">
+        <div class="division-standings-card female" id="femaleStandingsCard">
           <div class="division-header">
             <h2 class="division-title">
-              <span>♀ Women's Division</span>
+              <span>Women's Division</span>
             </h2>
-            <span class="qualifying-badge">⭐ TOP 7 QUALIFY</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="qualifying-badge">TOP 7 QUALIFIED</span>
+              <button class="btn btn-secondary btn-sm" id="btnToggleConcludeFemale" onclick="toggleConcludeDivision('female')" style="font-size: 0.74rem; padding: 4px 8px;">
+                End Women's Trials
+              </button>
+            </div>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+          <div id="femaleConcludedBanner"></div>
+          <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px;">
             Round-robin rankings sorted by Wins, Win %, Game Difference, and Point Difference.
           </p>
           <div id="standingsFemaleContainer">
@@ -188,8 +275,13 @@
           </div>
         </div>
 
-        <div style="font-size: 0.82rem; color: var(--text-muted);">
-          Each player competes in 1 match per round. Tables run concurrent matches.
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button class="btn btn-amber btn-sm" onclick="openLatePlayerModal()">
+            <span>+ Add Late Arrival</span>
+          </button>
+          <div style="font-size: 0.82rem; color: var(--text-muted);">
+            Each athlete competes in 1 match per round. Tables run concurrent matches.
+          </div>
         </div>
       </div>
 
@@ -204,7 +296,7 @@
     <section id="view_logs" style="display: none;">
       <div class="logs-toolbar">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
-          <input type="text" id="logsSearchInput" class="form-input" placeholder="Search player name or match info..." style="max-width: 320px; font-size: 0.88rem; padding: 8px 12px;">
+          <input type="text" id="logsSearchInput" class="form-input" placeholder="Search athlete name or table number..." style="max-width: 320px; font-size: 0.88rem; padding: 8px 12px;">
           <select id="logsDivFilter" class="form-select" style="max-width: 180px; font-size: 0.88rem; padding: 8px 12px;">
             <option value="all">All Divisions</option>
             <option value="male">Men's Only</option>
@@ -213,7 +305,8 @@
         </div>
 
         <button class="btn btn-secondary btn-sm" onclick="exportStandingsCSV()">
-          📥 Export Log CSV
+          <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Export Log CSV</span>
         </button>
       </div>
 
@@ -223,65 +316,113 @@
     </section>
 
     <!-- ======================================================================
-         VIEW 5: SETUP & ROSTER MANAGEMENT
+         VIEW 5: SETUP & TABLE CONFIGURATION
          ====================================================================== -->
     <section id="view_setup" style="display: none;">
       <div class="setup-grid">
-        <!-- Left: Configuration & Add Player -->
+        <!-- Left: Configuration & Dedicated Tables -->
         <div class="panel-card">
-          <!-- Hero Card Graphic -->
-          <div class="hero-card">
-            <img src="assets/hero.jpg" alt="Table Tennis Trials Graphic" onerror="this.style.display='none'">
-            <div class="hero-overlay">
-              <h3>Tournament Parameters</h3>
-              <p>Configure tables, match duration, and registered athletes.</p>
-            </div>
-          </div>
-
           <div class="panel-header">
             <h2 class="panel-title">
-              <span>⚙️ Tournament Settings</span>
+              <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Separate Table Allocation</span>
             </h2>
           </div>
 
+          <!-- Table Mode Selector -->
           <div class="form-group">
-            <label class="form-label" for="configTableCount">Number of Available Tables</label>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input type="number" id="configTableCount" class="form-input" value="7" min="1" max="32" style="max-width: 120px; font-family: var(--font-mono); font-weight: 700;">
-              <span class="form-hint" style="margin-top: 0;">(Matches are dispatched to these tables simultaneously)</span>
+            <label class="form-label">Table Allocation Mode</label>
+            <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+              <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.88rem;">
+                <input type="radio" name="tableAllocMode" value="dedicated" checked onchange="updateTableAllocationMode(this.value)"> Dedicated Tables (Separate for Men & Women)
+              </label>
+              <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.88rem;">
+                <input type="radio" name="tableAllocMode" value="shared" onchange="updateTableAllocationMode(this.value)"> Shared Table Pool
+              </label>
+            </div>
+            <p class="form-hint">Dedicated mode assigns specific tables exclusively to Men and Women (e.g. Tables 1-4 for Men, Tables 5-7 for Women).</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 14px; background: var(--bg-page); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); margin-bottom: 18px;">
+            <div>
+              <label class="form-label" for="configTablesMale" style="color: var(--div-male-text);">Men's Tables Count</label>
+              <input type="number" id="configTablesMale" class="form-input" value="4" min="1" max="16" style="font-family: var(--font-mono); font-weight: 800;" onchange="updateDedicatedTables()">
+              <span class="form-hint" id="menTablesRangeLabel">Tables 1 to 4</span>
+            </div>
+            <div>
+              <label class="form-label" for="configTablesFemale" style="color: var(--div-female-text);">Women's Tables Count</label>
+              <input type="number" id="configTablesFemale" class="form-input" value="3" min="1" max="16" style="font-family: var(--font-mono); font-weight: 800;" onchange="updateDedicatedTables()">
+              <span class="form-hint" id="womenTablesRangeLabel">Tables 5 to 7</span>
             </div>
           </div>
 
+          <!-- Auto-Flex Overflow Toggle -->
+          <div style="margin-top: -6px; margin-bottom: 16px; padding: 10px 14px; background: var(--bg-page); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.86rem; font-weight: 700; color: var(--text-main);">
+              <input type="checkbox" id="configAutoFlexTables" checked onchange="updateAutoFlexTables(this.checked)">
+              <span>Auto-distribute games to empty tables when a gender finishes</span>
+            </label>
+            <p class="form-hint" style="margin-top: 3px;">
+              When Women's or Men's matches finish (or division is concluded), their idle tables immediately host remaining matches of the other gender so all tables stay active.
+            </p>
+          </div>
+
           <div class="form-group" style="padding-top: 14px; border-top: 1px solid var(--border-subtle);">
-            <label class="form-label">Add Athlete to Trials</label>
+            <label class="form-label">Add Athlete</label>
             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
               <input type="text" id="newPlayerName" class="form-input" placeholder="Enter athlete full name..." style="flex: 1;">
             </div>
 
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-              <div class="gender-toggle-group" style="flex: 1;">
-                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--accent-male-light);">
-                  <input type="radio" name="newPlayerGender" value="male" checked> ♂ Male
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+              <div style="display: flex; gap: 16px; align-items: center;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 700; color: var(--div-male-text);">
+                  <input type="radio" name="newPlayerGender" value="male" checked> Male
                 </label>
-                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--accent-female-light); margin-left: 14px;">
-                  <input type="radio" name="newPlayerGender" value="female"> ♀ Female
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 700; color: var(--div-female-text);">
+                  <input type="radio" name="newPlayerGender" value="female"> Female
                 </label>
               </div>
 
-              <button class="btn btn-primary" onclick="addPlayer()">
-                + Add Athlete
-              </button>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" onclick="addPlayer()">
+                  + Add to Roster
+                </button>
+                <button class="btn btn-amber" onclick="addLatePlayerFromSetup()" title="Add directly to currently active tournament without reset">
+                  + Add to Live Trials
+                </button>
+              </div>
             </div>
-            <p class="form-hint">Athletes are strictly paired Male vs Male and Female vs Female in 1v1 round robins.</p>
           </div>
 
-          <div style="padding-top: 18px; border-top: 1px solid var(--border-subtle); display: flex; gap: 10px; flex-wrap: wrap;">
-            <button class="btn btn-secondary btn-sm" onclick="loadDefaultPlayers()">
-              🔄 Reset to 15 Sample Players (10M / 5F)
+          <div style="padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <button class="btn btn-secondary btn-sm" onclick="toggleBulkAdd()" type="button">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+              <span>Bulk Paste Athletes</span>
             </button>
-            <button class="btn btn-danger btn-sm" onclick="clearAllPlayers()">
-              🗑️ Clear Roster
+            <button class="btn btn-danger btn-sm" onclick="clearAllPlayers()" type="button" title="Clear all athletes and reset matches to start fresh">
+              <svg class="svg-icon svg-icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span>Clear Entire Roster</span>
             </button>
+          </div>
+
+          <!-- Collapsible Bulk Add Panel -->
+          <div id="bulkAddPanel" style="display: none; margin-top: 14px; padding: 14px; background: var(--bg-page); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+            <label class="form-label">Bulk Add Athletes (Paste Names, One Per Line)</label>
+            <textarea id="bulkPlayerNames" class="form-input" rows="4" placeholder="Enter athlete names, one per line:&#10;Player One&#10;Player Two&#10;Player Three" style="font-family: var(--font-main); font-size: 0.88rem; resize: vertical; margin-bottom: 10px;"></textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; gap: 14px; align-items: center;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 700; color: var(--div-male-text);">
+                  <input type="radio" name="bulkGender" value="male" checked> Male
+                </label>
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 700; color: var(--div-female-text);">
+                  <input type="radio" name="bulkGender" value="female"> Female
+                </label>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary btn-sm" onclick="toggleBulkAdd()" type="button">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="submitBulkPlayers()" type="button">+ Add All Names</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -289,9 +430,10 @@
         <div class="panel-card">
           <div class="panel-header">
             <h2 class="panel-title">
-              <span>📋 Registered Roster</span>
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>Registered Athletes</span>
             </h2>
-            <span class="badge-tag" id="rosterBadgeCount">Dynamic</span>
+            <span class="badge-tag-gold" id="rosterBadgeCount">0 Athletes</span>
           </div>
 
           <div class="roster-table-wrapper">
@@ -300,8 +442,8 @@
                 <tr>
                   <th style="width: 40px;">#</th>
                   <th>Athlete Name</th>
-                  <th style="width: 100px;">Division</th>
-                  <th style="text-align: right; width: 110px;">Actions</th>
+                  <th style="width: 110px;">Division</th>
+                  <th style="text-align: right; width: 130px;">Actions</th>
                 </tr>
               </thead>
               <tbody id="rosterTableBody">
@@ -311,8 +453,8 @@
           </div>
 
           <!-- Tournament Calculation Projection -->
-          <div style="margin-top: 18px; padding: 14px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md);">
-            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--accent-green); margin-bottom: 4px;">
+          <div style="margin-top: 18px; padding: 14px; background: var(--bg-page); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+            <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: var(--accent-primary); margin-bottom: 4px; letter-spacing: 0.05em;">
               Tournament Projection
             </div>
             <div id="rosterCalculationSummary" style="font-size: 0.85rem; color: var(--text-main); line-height: 1.6;">
@@ -322,10 +464,10 @@
 
           <div style="margin-top: 20px;">
             <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="generateTournament()">
-              ⚡ Generate Schedule & Start Trials
+              Generate Fresh Schedule & Start Trials
             </button>
             <p style="text-align: center; font-size: 0.78rem; color: var(--text-dim); margin-top: 8px;">
-              Generating a new schedule will preserve roster but reset match scores.
+              Generates round-robin fixtures and assigns dedicated tables.
             </p>
           </div>
         </div>
@@ -334,16 +476,97 @@
 
   </div>
 
+  <!-- End / Finalize Division Modal -->
+  <div class="modal-backdrop" id="endTournamentModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Finalize Trials Division</h3>
+        <button class="modal-close-btn" onclick="closeEndTournamentModal()">
+          <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 14px;">
+          Choose which division to conclude. Concluding a division officially confirms the <strong>Top 7 Qualifiers</strong> and stops further matches from being called to tables for that division.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+          <button class="btn btn-secondary" onclick="confirmConcludeDivision('male')" style="justify-content: space-between; padding: 12px 16px;">
+            <span style="font-weight: 800; color: var(--div-male-text);">Conclude Men's Division Only</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);" id="modalMaleStatusNote">Active</span>
+          </button>
+          <button class="btn btn-secondary" onclick="confirmConcludeDivision('female')" style="justify-content: space-between; padding: 12px 16px;">
+            <span style="font-weight: 800; color: var(--div-female-text);">Conclude Women's Division Only</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);" id="modalFemaleStatusNote">Active</span>
+          </button>
+          <button class="btn btn-danger" onclick="confirmConcludeDivision('both')" style="justify-content: space-between; padding: 12px 16px;">
+            <span style="font-weight: 800;">Conclude Entire Tournament (Both Men & Women)</span>
+            <span style="font-size: 0.75rem;">Wrap Up All</span>
+          </button>
+        </div>
+        <p class="form-hint">You can re-open any concluded division later if referee corrections are needed.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeEndTournamentModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Late Player Modal (Add player during live tournament) -->
+  <div class="modal-backdrop" id="latePlayerModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Late Arrival to Active Trials</h3>
+        <button class="modal-close-btn" onclick="closeLatePlayerModal()">
+          <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 14px;">
+          This will add the athlete to the <strong>active ongoing tournament</strong> and automatically generate 1v1 round-robin matches against all other players in their division.
+        </p>
+        <p style="margin-bottom: 18px; color: var(--accent-primary); font-size: 0.85rem; font-weight: 700;">
+          All currently ongoing tables, completed matches, and existing scores will be preserved.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="latePlayerName">Athlete Full Name</label>
+          <input type="text" id="latePlayerName" class="form-input" placeholder="e.g. Nathan Drake" autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Division</label>
+          <div style="display: flex; gap: 20px; align-items: center;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--div-male-text);">
+              <input type="radio" name="latePlayerGender" value="male" checked> Male Division
+            </label>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--div-female-text);">
+              <input type="radio" name="latePlayerGender" value="female"> Female Division
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeLatePlayerModal()">Cancel</button>
+        <button class="btn btn-amber" onclick="confirmAddLatePlayer()">
+          + Add Athlete & Generate Matches
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Reset Confirmation Modal -->
   <div class="modal-backdrop" id="resetModal">
     <div class="modal-card">
       <div class="modal-header">
         <h3 class="modal-title">Reset Tournament?</h3>
-        <button class="modal-close-btn" onclick="closeResetModal()">&times;</button>
+        <button class="modal-close-btn" onclick="closeResetModal()">
+          <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
       <div class="modal-body">
         <p>This will reset all current matches, live scores, and activity logs. Your player roster and table configuration will remain intact.</p>
-        <p style="margin-top: 10px; font-weight: 600; color: #ef4444;">Are you sure you want to proceed?</p>
+        <p style="margin-top: 10px; font-weight: 700; color: #991b1b;">Are you sure you want to proceed?</p>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeResetModal()">Cancel</button>
